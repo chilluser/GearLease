@@ -9,9 +9,18 @@ use Illuminate\Support\Facades\Storage;
 
 class ListingController extends Controller
 {
+
+    public function show($id)
+    {
+        $listing = Listing::with('seller')->findOrFail($id);
+        return Inertia::render('ListingDetails', ['item' => $listing]);
+    }
+
+
     public function showall()
     {
-        $items = Listing::with('seller')->orderBy('created_at','desc')->get();
+        // don't show rented listings on home
+        $items = Listing::with('seller')->where('rented', false)->orderBy('created_at','desc')->get();
         return Inertia::render('Home', ['items' => $items]);
     }
 
@@ -75,4 +84,30 @@ class ListingController extends Controller
         $listing->update($data);
         return redirect()->route('profile.edit')->with('success', 'Listing updated.');
     }
+
+    public function myRentals()
+    {
+        $userId = auth()->id();
+        $rentals = Listing::where('renter_id', $userId)
+            ->where('rented', true)
+            ->get()
+            ->map(function ($l) {
+                $daysLeft = null;
+                if ($l->rented_at && $l->rented_days) {
+                    $expires = $l->rented_at->copy()->addDays($l->rented_days);
+                    $daysLeft = max(0, now()->diffInDays($expires));
+                }
+                return [
+                    'id' => $l->id,
+                    'title' => $l->title,
+                    'rented_at' => $l->rented_at ? $l->rented_at->toDateTimeString() : null,
+                    'rented_days' => $l->rented_days,
+                    'days_left' => $daysLeft,
+                    'image_url' => $l->image ?? $l->image_url ?? null,
+                ];
+        });
+
+        return response()->json($rentals->values());
+    }
+
 }

@@ -86,7 +86,7 @@ export default function Header() {
                     </Button>
 
                     <Button className="outline-solid text-black bg-gray-300 hover:text-gray-400" aria-label="Options">Options</Button>
-                    <Link as={Button} href="/logout" className="outline-solid text-black bg-gray-300 hover:text-gray-400">Log Out</Link>
+                    <Link as={Button} onClick={() => Inertia.post('/logout')} className="outline-solid text-black bg-gray-300 hover:text-gray-400">Log Out</Link>
                 </nav>
             </div>
         </header>

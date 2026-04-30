@@ -8,6 +8,7 @@ use App\Http\Controllers\LogInController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ListingController;
+use App\Http\Controllers\ChatController;
 
 Route::middleware(['auth'])->group(function(){
     Route::get('/', [HomeController::class, 'index'])->name('Home');
@@ -23,18 +24,26 @@ Route::middleware(['auth'])->group(function(){
     Route::delete('/delete-listing/{id}', [ListingController::class, 'delete'])->name('delete.listing');
     Route::get('/edit-listing/{id}', [ListingController::class, 'edit'])->name('edit.listing');
     Route::put('/update-listing/{id}', [ListingController::class, 'update'])->name('update.listing');
-    // we dont have an update function yet.
+     
+    Route::get('/listings/{id}', [ListingController::class, 'show'])->name('listings.show');
+
+    Route::get('/conversations', [ChatController::class, 'index']);
+    Route::post('/conversations/{seller}/message', [ChatController::class, 'messageSeller'])->name('conversations.messageSeller');
+    Route::get('/conversations/{id}/messages', [ChatController::class, 'messages']);
+    Route::post('/conversations/{id}/send', [ChatController::class, 'send']);
+    Route::get('/rent-requests', [ChatController::class, 'rentRequests'])->name('rent.requests');
+    Route::post('/rent-requests/{message}/approve', [ChatController::class, 'approveRequest'])->name('rent.requests.approve');
+    Route::get('/my-rentals', [ListingController::class, 'myRentals'])->name('my.rentals');
 });
 
 Route::fallback(function(){
     return redirect()->route('login');
-}); 
-
+});
 
 Route::get('/login', [LogInController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LogInController::class, 'login'])->name('login.post');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
-
+Route::post('/logout', [LogInController::class, 'logout'])->name('logout');
 
 require __DIR__.'/settings.php';

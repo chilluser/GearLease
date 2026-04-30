@@ -1,11 +1,15 @@
 import React, {useEffect} from 'react';
-import { usePage, Head } from '@inertiajs/react';
+import { usePage, Head} from '@inertiajs/react';
 import Header from '../components/Header';
 import SidePanel from '../components/SidePanel';
+import ChatWidget from '../components/ChatWidget';
 import { Button } from '../components/ui/button';
 import { Inertia } from '@inertiajs/inertia';
+import { Link } from '@inertiajs/react';
+
 
 type Item ={
+    listing_id: number;
     title: string;
     description?: string;
     price_per_day: number;
@@ -17,7 +21,11 @@ type Item ={
 export default function Home() {
     const { props } = usePage();
     const user = {} //props.auth?.user;
-    const items = props.items as Item[];
+    const raw = (props as any).items;
+    const items = Array.isArray(raw) ? raw : (raw?.data ?? []);
+    if (!Array.isArray(items)) {
+    console.error('Unexpected items prop', raw);
+    }
 
     console.log('Home component rendered with items:', items);
     //still has all the values.
@@ -32,6 +40,9 @@ export default function Home() {
             }
         }
     }, [items]);
+
+
+    
 
     return (
         <>
@@ -49,7 +60,7 @@ export default function Home() {
                     <section className="col-span-12 md:col-span-9">
                         <div className="p-4 bg-gray-300 rounded-lg">
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {items.map(item => (
+                                {items.map((item: Item) => (
                                     <article
                                         key={item.title}
                                         className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 flex flex-col"
@@ -75,6 +86,9 @@ export default function Home() {
                                                 <span className="ml-auto text-xs text-gray-500">
                                                     Seller: {item.seller?.name ?? '—'}
                                                 </span>
+                                                <Link as={Button}href={`/listings/${item.listing_id}`} className="inline-block bg-blue-500 text-white font-semibold px-3 py-1 rounded-full text-sm">
+                                                    Rent Now
+                                                </Link>
                                             </div>
                                         </div>
                                     </article>
@@ -82,6 +96,8 @@ export default function Home() {
                             </div>
                         </div>
                     </section>
+
+                    <ChatWidget />
                 </div>
             </main>
         </>

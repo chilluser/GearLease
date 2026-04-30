@@ -10,21 +10,34 @@ class HomeController extends Controller
 {
     public function index(Request $request, ?string $filter = null)
     {
-        $items = Listing::with('seller')->orderBy('created_at','desc');
-        // how do we know when its a search term and when filter? Answer: We can check if the request has a search term parameter. If it does, we can use that to filter the listings. If it doesn't, we can check for a category filter parameter and use that instead.
-        if ($request->has('searchterm')) {
-            $searchTerm = $request->input('searchterm');
-            $items->where(function($query) use ($searchTerm) {
-                $query->where('title', 'like', "%{$searchTerm}%")
-                      ->orWhere('description', 'like', "%{$searchTerm}%");
+        // prefer explicit inputs: query param 'searchterm' or route param 'searchterm'
+        $searchTerm = $request->input('searchterm') ?? $request->route('searchterm') ?? null;
+
+        // category filter can come from the route param ($filter) or query string 'filter'
+        $categoryFilter = $filter ?? $request->route('filter') ?? $request->input('filter') ?? null;
+
+        // build query and exclude rented listings
+        $query = Listing::with('seller')->where('rented', false)->orderBy('created_at', 'desc');
+
+        if ($searchTerm) {
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%");
             });
         }
 
-        if ($filter) {
-            $items->where('category', $filter);
+        if ($categoryFilter) {
+            $query->where('category', $categoryFilter);
         }
 
-        return Inertia::render('Home', ['items' => $items->get()]);
+        $items = $query->get();
+
+        $openChat = $request->query('open_chat');
+
+        return Inertia::render('Home', [
+            'items' => $items,
+            'open_chat' => $openChat ? (int) $openChat : null,
+        ]);
     }
     public function store(Request $request)
     {
