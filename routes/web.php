@@ -16,6 +16,8 @@ Route::middleware(['auth'])->group(function(){
     Route::post('/listings', [HomeController::class, 'store'])->name('listings.store');
     Route::get('/category/{filter}', [HomeController::class, 'index'])->name('Home.filter');
 
+    Route::get('/external-info', [ListingController::class, 'getExternalInfo']);
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 

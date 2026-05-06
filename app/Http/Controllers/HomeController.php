@@ -19,6 +19,12 @@ class HomeController extends Controller
         // build query and exclude rented listings
         $query = Listing::with('seller')->where('rented', false)->orderBy('created_at', 'desc');
 
+        // If the user is authenticated, exclude their own listings from the feed
+        $userId = auth()->id();
+        if ($userId) {
+            $query->where('seller_id', '!=', $userId);
+        }
+
         if ($searchTerm) {
             $query->where(function($q) use ($searchTerm) {
                 $q->where('title', 'like', "%{$searchTerm}%")
@@ -32,11 +38,14 @@ class HomeController extends Controller
 
         $items = $query->get();
 
+        // debug: log and return current user id to the frontend
+        \Log::info('HomeController:index called', ['auth_id' => auth()->id()]);
         $openChat = $request->query('open_chat');
 
         return Inertia::render('Home', [
             'items' => $items,
             'open_chat' => $openChat ? (int) $openChat : null,
+            'current_user_id' => auth()->id(),
         ]);
     }
     public function store(Request $request)

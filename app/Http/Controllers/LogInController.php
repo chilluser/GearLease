@@ -38,4 +38,34 @@ class LogInController extends Controller
         $request->session()->regenerateToken();
         return redirect('/login');
     }
+
+    public function apiLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        $user = \App\Models\User::where('email', $request->email)->first();
+
+        if (! $user || ! \Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        // Generate the token
+        $token = $user->createToken('postman-token')->plainTextToken;
+
+        return response()->json([
+            'token' => $token,
+            'user' => $user
+        ]);
+    }
+    public function apiLogout(Request $request)
+    {
+        $token = $request->user()->currentAccessToken();
+        if ($token){
+            $token->delete();
+        }
+        return response()->json(['success' => true]);
+    }
 }
